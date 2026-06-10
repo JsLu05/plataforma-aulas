@@ -82,7 +82,7 @@ def eliminar(id):
     return jsonify({
         'mensaje': f'Incidencia {id} eliminada correctamente'
     })
-
+ 
 
 if __name__ == '__main__':
     app.run(debug=True)
