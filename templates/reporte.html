@@ -14,7 +14,7 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="dashboard.html">Incidencias</a></li>
                     <li class="nav-item"><a class="nav-link" href="reporte.html">Reportar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="">Consultas</a></li>
+                    <li class="nav-item"><a class="nav-link" href=" ">Consultas</a></li>
                     <li class="nav-item" id="authLink"><a class="nav-link" href="login.html">Login</a></li>
                 </ul>
             </div>
@@ -129,7 +129,7 @@
                 estado: document.getElementById('estado').value,
                 id_usuario: parseInt(idUsuario)
             };
-            // Validaciones
+            
             if (!incidencia.id_aula) {
                 document.getElementById('mensaje').innerHTML = '<div class="alert alert-danger">Seleccione un aula</div>';
                 return;
