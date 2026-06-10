@@ -7,7 +7,6 @@ app = Flask(__name__)
 
 SECRET_KEY = "proyecto2026"
 
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
