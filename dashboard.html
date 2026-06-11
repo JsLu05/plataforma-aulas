@@ -47,8 +47,8 @@
                         <option value="">Todos los estados</option>
                         <option value="Pendiente">Pendiente</option>
                         <option value="En proceso">En proceso</option>
-                        <option value="Resuelta">Resuelta</option>
-                    </select>
+                        <option value="Resuelto">Resuelto</option>
+</select>
                 </div>
                 <div class="col-md-3">
                     <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
@@ -83,7 +83,7 @@
                     <select id="nuevoEstado" class="form-select">
                         <option value="Pendiente">Pendiente</option>
                         <option value="En proceso">En proceso</option>
-                        <option value="Resuelta">Resuelta</option>
+                        <option value="Resuelto">Resuelta</option>
                     </select>
                 </div>
                 <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" id="guardarEstadoBtn">Actualizar</button></div>
@@ -101,7 +101,7 @@
         } else {
             window.location.href = '/login';
         }
-        function logout() { localStorage.removeItem('access_token'); window.location.href = '/login'; }
+        function logout() { localStorage.removeItem('access_token'); window.location.href = '/login.html'; }
 
         let incidencias = [];
         let modalEstadoInstance;
