@@ -1,10 +1,9 @@
-from flask import Flask, jsonify, request, render_template, send_from_directory
+from flask import Flask, jsonify, request, render_template
 from flask_mysqldb import MySQL
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from datetime import timedelta
-import os
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__)
 
 app.config['MYSQL_HOST'] = "localhost"
 app.config['MYSQL_USER'] = "root"
@@ -37,11 +36,7 @@ def obtener_id_usuario_actual():
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('.', filename)
+    return render_template('index.html')
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -399,7 +394,7 @@ def incidencias_ultima_semana():
     cursor = mysql.connection.cursor()
     cursor.execute("""
         SELECT i.id_incidencia, i.titulo, i.tipo, i.estado, 
-               a.nombre as aula, DATE_FORMAT(i.fecha_reporte, '%Y-%m-%d') as fecha
+               a.nombre as aula, DATE_FORMAT(i.fecha_reporte, '%%Y-%%m-%%d') as fecha
         FROM incidencias i
         JOIN aulas a ON i.id_aula = a.id_aula
         WHERE i.fecha_reporte >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
@@ -422,11 +417,19 @@ def incidencias_ultima_semana():
 
 @app.route('/dashboard')
 def dashboard():
-    return send_from_directory('.', 'dashboard.html')
+    return render_template('dashboard.html')
 
 @app.route('/login')
 def login_page():
-    return send_from_directory('.', 'login.html')
+    return render_template('login.html')
+
+@app.route('/consultas')
+def consultas():
+    return render_template('consultas.html')
+
+@app.route('/reporte')
+def reporte():
+    return render_template('reporte.html')
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

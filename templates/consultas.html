@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <title>Consultas Personalizadas - Reporte de Aulas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="consultas.html">
-    <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -16,10 +14,10 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Incidencias</a></li>
-                    <li class="nav-item"><a class="nav-link" href="reporte.html">Reportar</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="consultas.html">Consultas</a></li>
-                    <li class="nav-item" id="authLink"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Incidencias</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reporte">Reportar</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/consultas">Consultas</a></li>
+                    <li class="nav-item" id="authLink"><a class="nav-link" href="/login">Login</a></li>
                 </ul>
             </div>
         </div>
@@ -60,7 +58,6 @@
                 </div>
             </div>
 
-            <!-- Consulta 2: Última semana -->
             <div class="tab-pane fade" id="semana" role="tabpanel">
                 <div class="card">
                     <div class="card-header bg-info text-white">
@@ -140,7 +137,6 @@
             }
         }
 
-        // Consulta 2: Incidencias última semana
         async function cargarUltimaSemana() {
             try {
                 const response = await fetch('/api/consultas/incidencias-ultima-semana', {
@@ -176,7 +172,6 @@
             }
         }
 
-        // Recargar cuando se cambia de pestaña
         document.getElementById('pendientes-tab').addEventListener('click', () => cargarPendientesPorAula());
         document.getElementById('semana-tab').addEventListener('click', () => cargarUltimaSemana());
     </script>
