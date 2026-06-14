@@ -394,7 +394,7 @@ def incidencias_ultima_semana():
     cursor = mysql.connection.cursor()
     cursor.execute("""
         SELECT i.id_incidencia, i.titulo, i.tipo, i.estado, 
-               a.nombre as aula, DATE_FORMAT(i.fecha_reporte, '%%Y-%%m-%%d') as fecha
+               a.nombre as aula, DATE_FORMAT(i.fecha_reporte, '%Y-%m-%d') as fecha
         FROM incidencias i
         JOIN aulas a ON i.id_aula = a.id_aula
         WHERE i.fecha_reporte >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
@@ -414,6 +414,7 @@ def incidencias_ultima_semana():
             "fecha": row[5]
         })
     return jsonify(resultado)
+
 
 @app.route('/dashboard')
 def dashboard():
