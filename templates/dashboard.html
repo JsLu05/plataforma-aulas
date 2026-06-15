@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <title>Seguimiento de Incidencias</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/estilo.css">
+    <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="index.html">Reporte de Aulas</a>
+            <a class="navbar-brand" href="/">Reporte de Aulas</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Incidencias</a></li>
-                    <li class="nav-item"><a class="nav-link" href="reporte.html">Reportar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="consultas.html">Consultas</a></li>
-                    <li class="nav-item" id="authLink"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Incidencias</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reporte">Reportar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/consultas">Consultas</a></li>
+                    <li class="nav-item" id="authLink"><a class="nav-link" href="/login">Login</a></li>
                 </ul>
             </div>
         </div>
@@ -56,29 +56,22 @@
                 </div>
             </div>
         </div>
-       
+
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
-                        <th>Título</th>
-                        <th>Aula</th>
-                        <th>Tipo</th>
-                        <th>Descripción</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
+                        <th>ID</th><th>Aula</th><th>Tipo</th><th>Descripción</th><th>Fecha</th><th>Estado</th><th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tablaIncidencias">
-                    <tr><td colspan="8" class="text-center">Cargando...</td></tr>
+                    <tr><td colspan="7" class="text-center">Cargando...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    
+    <!-- Modal para cambiar estado -->
     <div class="modal fade" id="modalEstado" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -105,116 +98,25 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const token = localStorage.getItem('access_token');
-        const authLink = document.getElementById('authLink');
-        
-        if (token) {
-            authLink.innerHTML = '<a class="nav-link" href="#" onclick="logout()">Cerrar sesión</a>';
-        } else {
-            window.location.href = '/login';
-        }
-        
-        function logout() {
-            localStorage.removeItem('access_token');
-            window.location.href = '/login';
-        }
-
         let incidencias = [];
-        let modalEstadoInstance;
-
-        async function cargarIncidencias(filtros = {}) {
-            const tokenActual = localStorage.getItem('access_token');
-            if (!tokenActual) return;
-            
-            const params = new URLSearchParams();
-            if (filtros.aula) params.append('aula', filtros.aula);
-            if (filtros.tipo) params.append('tipo', filtros.tipo);
-            if (filtros.estado) params.append('estado', filtros.estado);
-            const url = `/api/incidencias${params.toString() ? '?' + params.toString() : ''}`;
-            
-            try {
-                const response = await fetch(url, { 
-                    headers: { 'Authorization': `Bearer ${tokenActual}` } 
-                });
-                if (response.ok) {
-                    incidencias = await response.json();
-                    renderizarTabla(incidencias);
-                } else if (response.status === 401) {
-                    logout();
-                } else {
-                    document.getElementById('tablaIncidencias').innerHTML = 
-                        '<tr><td colspan="8" class="text-center">Error al cargar incidencias</td></tr>';
-                }
-            } catch(err) {
-                document.getElementById('tablaIncidencias').innerHTML = 
-                    '<tr><td colspan="8" class="text-center">Error de conexión con el servidor</td></tr>';
-            }
+        let modalEstadoInstance = null;
+        const rol = localStorage.getItem('rol');
+        const token = localStorage.getItem('access_token');
+        
+        const authLink = document.getElementById('authLink');
+        if (!token) {
+            window.location.href = '/login';
+        } else {
+            authLink.innerHTML = '<a class="nav-link" href="#" onclick="logout()">Cerrar sesión</a>';
         }
-
-        function renderizarTabla(data) {
-            const tbody = document.getElementById('tablaIncidencias');
-            if (!data.length) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay incidencias</td></tr>';
-                return;
-            }
-            tbody.innerHTML = '';
-            data.forEach(inc => {
-                let badgeClass = inc.estado === 'Pendiente' ? 'bg-warning' : 
-                                 (inc.estado === 'En proceso' ? 'bg-info' : 'bg-success');
-                const row = `
-                    <tr>
-                        <td>${inc.id}</td>
-                        <td>${inc.titulo || ''}</td>
-                        <td>${inc.aula}</td>
-                        <td>${inc.tipo || 'N/A'}</td>
-                        <td>${inc.descripcion ? inc.descripcion.substring(0, 60) + (inc.descripcion.length > 60 ? '…' : '') : ''}</td>
-                        <td>${inc.fecha}</td>
-                        <td><span class="badge ${badgeClass}">${inc.estado}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-info verBtn" data-id="${inc.id}">Ver</button>
-                            <button class="btn btn-sm btn-warning estadoBtn" data-id="${inc.id}" data-estado="${inc.estado}">Cambiar estado</button>
-                            <button class="btn btn-sm btn-danger eliminarBtn" data-id="${inc.id}">Eliminar</button>
-                        </td>
-                    </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
-            });
-            
-          
-            document.querySelectorAll('.verBtn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.getAttribute('data-id');
-                    const inc = incidencias.find(i => i.id == id);
-                    alert(`Detalles:\nTítulo: ${inc.titulo}\nAula: ${inc.aula}\nTipo: ${inc.tipo}\nDescripción: ${inc.descripcion}\nEstado: ${inc.estado}\nFecha: ${inc.fecha}`);
-                });
-            });
-            
-            document.querySelectorAll('.eliminarBtn').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    if (!confirm('¿Eliminar esta incidencia?')) return;
-                    const id = btn.getAttribute('data-id');
-                    const tokenActual = localStorage.getItem('access_token');
-                    const response = await fetch(`/api/incidencias/${id}`, { 
-                        method: 'DELETE', 
-                        headers: { 'Authorization': `Bearer ${tokenActual}` } 
-                    });
-                    if (response.ok) {
-                        cargarIncidencias(obtenerFiltrosActivos());
-                    } else {
-                        alert('Error al eliminar');
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.estadoBtn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.getElementById('updateId').value = btn.getAttribute('data-id');
-                    document.getElementById('nuevoEstado').value = btn.getAttribute('data-estado');
-                    modalEstadoInstance.show();
-                });
-            });
+        
+        function logout() { 
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('id_usuario');
+            localStorage.removeItem('rol');
+            window.location.href = '/login'; 
         }
-
+        
         function obtenerFiltrosActivos() {
             return {
                 aula: document.getElementById('filtroAula').value,
@@ -222,45 +124,155 @@
                 estado: document.getElementById('filtroEstado').value
             };
         }
+        
+        async function cargarIncidencias(filtros = {}) {
+            const tokenActual = localStorage.getItem('access_token');
+            if (!tokenActual) return;
+            
+            const params = new URLSearchParams();
+            if (filtros.aula && filtros.aula.trim() !== '') params.append('aula', filtros.aula);
+            if (filtros.tipo && filtros.tipo !== '') params.append('tipo', filtros.tipo);
+            if (filtros.estado && filtros.estado !== '') params.append('estado', filtros.estado);
+            
+            const url = `/api/incidencias${params.toString() ? '?' + params.toString() : ''}`;
+            
+            try {
+                const response = await fetch(url, { 
+                    headers: { 'Authorization': `Bearer ${tokenActual}` } 
+                });
+                
+                if (response.status === 401) {
+                    logout();
+                    return;
+                }
+                
+                if (response.ok) {
+                    incidencias = await response.json();
+                    renderizarTabla(incidencias);
+                } else {
+                    document.getElementById('tablaIncidencias').innerHTML = '<tr><td colspan="7" class="text-center">Error al cargar</td></tr>';
+                }
+            } catch(err) {
+                console.error('Error:', err);
+                document.getElementById('tablaIncidencias').innerHTML = '<tr><td colspan="7" class="text-center">Error de conexión</td></tr>';
+            }
+        }
+        
+        function renderizarTabla(data) {
+            const tbody = document.getElementById('tablaIncidencias');
+            
+            if (!data.length) { 
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay incidencias</td></tr>'; 
+                return; 
+            }
+            
+            tbody.innerHTML = '';
+            
+            data.forEach(inc => {
+                let badgeClass = inc.estado === 'Pendiente' ? 'bg-warning' : (inc.estado === 'En proceso' ? 'bg-info' : 'bg-success');
 
-        document.getElementById('btnFiltrar').addEventListener('click', () => cargarIncidencias(obtenerFiltrosActivos()));
-        document.getElementById('btnLimpiar').addEventListener('click', () => {
-            document.getElementById('filtroAula').value = '';
-            document.getElementById('filtroTipo').value = '';
-            document.getElementById('filtroEstado').value = '';
-            cargarIncidencias({});
-        });
+                let botones = `<button class="btn btn-sm btn-info verBtn" data-id="${inc.id}">Ver</button>`;
+                
+                if (rol === 'admin') {
+                    botones += `
+                        <button class="btn btn-sm btn-warning estadoBtn" data-id="${inc.id}" data-estado="${inc.estado}">Cambiar estado</button>
+                        <button class="btn btn-sm btn-danger eliminarBtn" data-id="${inc.id}">Eliminar</button>
+                    `;
+                }
+                
+                const row = `
+                    <tr>
+                        <td>${inc.id}</td>
+                        <td>${inc.aula}</td>
+                        <td>${inc.tipo || 'N/A'}</td>
+                        <td>${inc.descripcion ? inc.descripcion.substring(0, 60) : ''}${inc.descripcion && inc.descripcion.length > 60 ? '…' : ''}</td>
+                        <td>${inc.fecha}</td>
+                        <td><span class="badge ${badgeClass}">${inc.estado}</span></td>
+                        <td>${botones}</td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
 
-        document.getElementById('guardarEstadoBtn').addEventListener('click', async () => {
+            document.querySelectorAll('.verBtn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    const inc = incidencias.find(i => i.id === id);
+                    alert(`📋 DETALLES DE INCIDENCIA\n\nAula: ${inc.aula}\nTipo: ${inc.tipo}\nDescripción: ${inc.descripcion}\nEstado: ${inc.estado}\nFecha: ${inc.fecha}`);
+                });
+            });
+
+            if (rol === 'admin') {
+                document.querySelectorAll('.eliminarBtn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (!confirm('¿Eliminar esta incidencia permanentemente?')) return;
+                        const id = btn.getAttribute('data-id');
+                        const tokenActual = localStorage.getItem('access_token');
+                        const response = await fetch(`/api/incidencias/${id}`, { 
+                            method: 'DELETE', 
+                            headers: { 'Authorization': `Bearer ${tokenActual}` } 
+                        });
+                        if (response.ok) {
+                            cargarIncidencias(obtenerFiltrosActivos());
+                        } else {
+                            const error = await response.json();
+                            alert(error.mensaje || 'Error al eliminar');
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.estadoBtn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.getElementById('updateId').value = btn.getAttribute('data-id');
+                        document.getElementById('nuevoEstado').value = btn.getAttribute('data-estado');
+                        modalEstadoInstance.show();
+                    });
+                });
+            }
+        }
+        
+        async function guardarEstado() {
             const id = document.getElementById('updateId').value;
             const nuevoEstado = document.getElementById('nuevoEstado').value;
             const tokenActual = localStorage.getItem('access_token');
             
             try {
-                const response = await fetch(`/api/incidencias/${id}`, {
+                const response = await fetch(`/api/incidencias/${id}/estado`, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json', 
-                        'Authorization': `Bearer ${tokenActual}` 
+                        'Authorization': `Bearer ${tokenActual}`
                     },
                     body: JSON.stringify({ estado: nuevoEstado })
                 });
                 
                 if (response.ok) {
                     modalEstadoInstance.hide();
-                    await cargarIncidencias(obtenerFiltrosActivos());
+                    cargarIncidencias(obtenerFiltrosActivos());
                 } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    alert(`Error al actualizar: ${errorData.mensaje || 'Código ' + response.status}`);
+                    const error = await response.json();
+                    alert(error.mensaje || 'Error al actualizar estado');
                 }
-            } catch (err) {
-                alert('Error de conexión al actualizar el estado');
+            } catch(err) {
+                alert('Error de conexión al actualizar estado');
             }
-        });
-
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
             modalEstadoInstance = new bootstrap.Modal(document.getElementById('modalEstado'));
             cargarIncidencias({});
+            document.getElementById('btnFiltrar').addEventListener('click', () => {
+                cargarIncidencias(obtenerFiltrosActivos());
+            });
+            
+            document.getElementById('btnLimpiar').addEventListener('click', () => {
+                document.getElementById('filtroAula').value = '';
+                document.getElementById('filtroTipo').value = '';
+                document.getElementById('filtroEstado').value = '';
+                cargarIncidencias({});
+            });
+            
+            document.getElementById('guardarEstadoBtn').addEventListener('click', guardarEstado);
         });
     </script>
 </body>

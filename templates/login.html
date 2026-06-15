@@ -9,13 +9,13 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="index.html">Reporte de Aulas</a>
+            <a class="navbar-brand" href="/">Reporte de Aulas</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Incidencias</a></li>
-                    <li class="nav-item"><a class="nav-link" href="reporte.html">Reportar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="consultas.html">Consultas</a></li>
-                    <li class="nav-item" id="authLink"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Incidencias</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reporte">Reportar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="">Consultas</a></li>
+                    <li class="nav-item" id="authLink"><a class="nav-link" href="/login">Login</a></li>
                 </ul>
             </div>
         </div>
@@ -67,7 +67,7 @@
                 } else {
                     document.getElementById('loginError').innerText = 'Credenciales inválidas';
                 }
-            } catch (err) {
+            } catch (err) {            
                 document.getElementById('loginError').innerText = 'Error de conexión';
             }
         });

@@ -9,13 +9,13 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="index.html">Reporte de Aulas</a>
+            <a class="navbar-brand" href="/">Reporte de Aulas</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Incidencias</a></li>
-                    <li class="nav-item"><a class="nav-link" href="reporte.html">Reportar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="consultas.html">Consultas</a></li>
-                    <li class="nav-item" id="authLink"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Incidencias</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reporte">Reportar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/consultas">Consultas</a></li>
+                    <li class="nav-item" id="authLink"><a class="nav-link" href="/login">Login</a></li>
                 </ul>
             </div>
         </div>
@@ -29,17 +29,17 @@
                     <div class="card-body">
                         <form id="formReporte">
                             <div class="mb-3">
-                                <label>Título</label>
+                                <label>Título *</label>
                                 <input type="text" id="titulo" class="form-control" required>
                             </div>
                             <div class="mb-3">
-                                <label>Aula</label>
+                                <label>Aula *</label>
                                 <select id="id_aula" class="form-select" required>
                                     <option value="">Cargando aulas...</option>
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label>Tipo de problema</label>
+                                <label>Tipo de problema *</label>
                                 <select id="tipo" class="form-select" required>
                                     <option value="Proyector">Proyector</option>
                                     <option value="Computadora">Computadora</option>

@@ -1,10 +1,9 @@
-from flask import Flask, jsonify, request, render_template, send_from_directory
+from flask import Flask, jsonify, request, render_template
 from flask_mysqldb import MySQL
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from datetime import timedelta
-import os
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__)
 
 app.config['MYSQL_HOST'] = "localhost"
 app.config['MYSQL_USER'] = "root"
@@ -17,13 +16,27 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=8)
 mysql = MySQL(app)
 jwt = JWTManager(app)
 
+def es_admin():
+    try:
+        user_id = get_jwt_identity()
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT rol FROM usuarios WHERE id_usuario = %s", (user_id,))
+        usuario = cursor.fetchone()
+        cursor.close()
+        return usuario[0] == 'admin' if usuario else False
+    except:
+        return False
+
+def obtener_id_usuario_actual():
+    try:
+        user_id = get_jwt_identity()
+        return int(user_id) if user_id else None
+    except:
+        return None
+
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('.', filename)
+    return render_template('index.html')
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -46,7 +59,7 @@ def login():
         if usuario[4] != password:
             return jsonify({"mensaje": "Credenciales inválidas"}), 401
 
-        token = create_access_token(identity=usuario[0])
+        token = create_access_token(identity=str(usuario[0]))
         
         return jsonify({
             "token": token,
@@ -57,7 +70,6 @@ def login():
         })
     except Exception as e:
         return jsonify({"mensaje": f"Error en login: {str(e)}"}), 500
-    
 
 @app.route('/api/usuarios', methods=['GET'])
 def listar_usuarios():
@@ -172,6 +184,7 @@ def eliminar_aula(id):
     return jsonify({"mensaje": "Aula eliminada"}), 200
 
 @app.route('/api/incidencias', methods=['GET'])
+
 def listar_incidencias():
     aula = request.args.get('aula', '')
     tipo = request.args.get('tipo', '')
@@ -247,15 +260,17 @@ def obtener_incidencia(id):
 @jwt_required()
 def crear_incidencia():
     data = request.get_json()
-    user_id = get_jwt_identity()
-    id_usuario = data.get('id_usuario', user_id)
+    user_id = obtener_id_usuario_actual()
+    
+    if not user_id:
+        return jsonify({"mensaje": "No se pudo identificar al usuario"}), 401
     
     cursor = mysql.connection.cursor()
     cursor.execute("""
         INSERT INTO incidencias(titulo, descripcion, tipo, fecha_reporte, estado, id_usuario, id_aula)
         VALUES (%s, %s, %s, CURDATE(), %s, %s, %s)
     """, (data['titulo'], data.get('descripcion', ''), data['tipo'], 
-          data.get('estado', 'Pendiente'), id_usuario, data['id_aula']))
+          data.get('estado', 'Pendiente'), user_id, data['id_aula']))
     mysql.connection.commit()
     cursor.close()
     return jsonify({"mensaje": "Incidencia registrada con éxito!!!"}), 201
@@ -264,6 +279,9 @@ def crear_incidencia():
 @jwt_required()
 def modificar_incidencia(id):
     try:
+        if not es_admin():
+            return jsonify({"mensaje": "Acceso denegado. Solo administradores pueden modificar incidencias"}), 403
+        
         data = request.get_json()
         
         if not data:
@@ -271,13 +289,11 @@ def modificar_incidencia(id):
         
         cursor = mysql.connection.cursor()
         
-        # Verificar si existe
         cursor.execute("SELECT id_incidencia FROM incidencias WHERE id_incidencia = %s", (id,))
         if not cursor.fetchone():
             cursor.close()
             return jsonify({"mensaje": "LA INCIDENCIA NO EXISTE"}), 404
         
-        # Construir actualización dinámica
         campos = []
         valores = []
         
@@ -307,6 +323,9 @@ def modificar_incidencia(id):
 @app.route('/api/incidencias/<int:id>', methods=['DELETE'])
 @jwt_required()
 def eliminar_incidencia(id):
+    if not es_admin():
+        return jsonify({"mensaje": "Acceso denegado. Solo administradores pueden eliminar incidencias"}), 403
+    
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT titulo FROM incidencias WHERE id_incidencia = %s", (id,))
     if not cursor.fetchone():
@@ -317,6 +336,40 @@ def eliminar_incidencia(id):
     mysql.connection.commit()
     cursor.close()
     return jsonify({"mensaje": "Incidencia eliminada"}), 200
+
+@app.route('/api/incidencias/<int:id>/estado', methods=['PUT'])
+@jwt_required()
+def cambiar_estado_incidencia(id):
+    try:
+        if not es_admin():
+            return jsonify({"mensaje": "Acceso denegado. Solo administradores pueden modificar incidencias"}), 403
+        
+        data = request.get_json()
+        
+        if not data or 'estado' not in data:
+            return jsonify({"mensaje": "Se requiere el campo 'estado'"}), 400
+        
+        nuevo_estado = data['estado']
+        
+        estados_validos = ['Pendiente', 'En proceso', 'Resuelto']
+        if nuevo_estado not in estados_validos:
+            return jsonify({"mensaje": f"Estado inválido. Debe ser: {', '.join(estados_validos)}"}), 400
+        
+        cursor = mysql.connection.cursor()
+        
+        cursor.execute("SELECT id_incidencia FROM incidencias WHERE id_incidencia = %s", (id,))
+        if not cursor.fetchone():
+            cursor.close()
+            return jsonify({"mensaje": "LA INCIDENCIA NO EXISTE"}), 404
+        
+        cursor.execute("UPDATE incidencias SET estado = %s WHERE id_incidencia = %s", (nuevo_estado, id))
+        mysql.connection.commit()
+        cursor.close()
+        
+        return jsonify({"mensaje": f"Estado actualizado a '{nuevo_estado}' exitosamente"}), 200
+        
+    except Exception as e:
+        return jsonify({"mensaje": f"Error interno: {str(e)}"}), 500
 
 @app.route('/api/consultas/incidencias-pendientes-por-aula', methods=['GET'])
 @jwt_required()
@@ -362,14 +415,22 @@ def incidencias_ultima_semana():
         })
     return jsonify(resultado)
 
+
 @app.route('/dashboard')
 def dashboard():
-    return send_from_directory('.', 'dashboard.html')
+    return render_template('dashboard.html')
 
 @app.route('/login')
 def login_page():
-    return send_from_directory('.', 'login.html')
+    return render_template('login.html')
+
+@app.route('/consultas')
+def consultas():
+    return render_template('consultas.html')
+
+@app.route('/reporte')
+def reporte():
+    return render_template('reporte.html')
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
-
